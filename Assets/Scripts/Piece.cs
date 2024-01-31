@@ -14,7 +14,7 @@ public class Piece : MonoBehaviour
     private float timeElapsed = 0;
     public int rotationIndex { get; private set; }
     [SerializeField]
-    private double buttonTimer = .2;
+    private double buttonTimer = .3;
     public float stepDelay = 1f;
     public float lockDelay = .5f;
     private float stepTime;
@@ -82,11 +82,11 @@ public class Piece : MonoBehaviour
             SlamDrop();
             timeElapsed = 0;
         }
-        else if (Input.GetKeyDown(KeyCode.Q))
+        else if (Input.GetKeyDown(KeyCode.Q) || Input.GetKeyDown(KeyCode.LeftBracket))
         {
             Rotate(-1);
         }
-        else if (Input.GetKeyDown(KeyCode.E))
+        else if (Input.GetKeyDown(KeyCode.E) || Input.GetKeyDown(KeyCode.RightBracket))
         {
             Rotate(1);
         }
@@ -144,6 +144,9 @@ public class Piece : MonoBehaviour
             continue;
         }
 
+        //add one point for hard drop
+        //and then in the board controller 1 point is always added when the piece is placed
+        this.board.score += 1;
         Lock();
     }
 

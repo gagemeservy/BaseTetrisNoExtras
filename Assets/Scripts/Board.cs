@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.SocialPlatforms.Impl;
 using UnityEngine.Tilemaps;
 
 public class Board : MonoBehaviour
@@ -8,6 +9,7 @@ public class Board : MonoBehaviour
     public Tilemap tilemap { get; private set;}
     public TetrominoData[] tetrominoes;
     public Piece activePiece { get; private set; }
+    public Piece nextPiece { get; private set; }
     public Vector3Int spawnPosition;
     /******************************
      * THIS MAY CAUSE PROBLEMS. INITIALLY THE HEIGHT IS 20, BUT I ADDED 2 BECAUSE SOME OF THE PIECES SPAWN DIRECTLY
@@ -16,6 +18,11 @@ public class Board : MonoBehaviour
      * ********************************************************/
     //public Vector2Int boardSize = new Vector2Int(10, 22);
     public Vector2Int boardSize = new Vector2Int(10, 20);
+    public int difficultyLevel = 1;
+    public int score = 0;
+    public int comboCount = -1;
+    public bool ongoingCombo = false;
+    public float stepReductionMultiplier = .05f;
 
     public RectInt Bounds
     {
@@ -74,6 +81,8 @@ public class Board : MonoBehaviour
             Vector3Int tilePosition = piece.cells[i] + piece.position;
             this.tilemap.SetTile(tilePosition, piece.data.tile);
         }
+
+        this.score += 1;
     }
 
     public void ClearPiece(Piece piece)
@@ -114,19 +123,90 @@ public class Board : MonoBehaviour
 
     public void ClearLines()
     {
+        //DIFFICULTY LEVEL IS KEPT TRACK OF IN THIS FUNCTION EVERY TIME A LEVEL IS CLEARED
+
         RectInt bounds = this.Bounds;
         int row = bounds.yMin;
+        int newDifficultyLevel = difficultyLevel;
 
         while (row < bounds.yMax) 
         {
             if (IsLineFull(row))
             {
                 LineClear(row);
+                newDifficultyLevel++;
             }
             else
             {
                 row++;
             }
+        }
+
+
+        int linesCleared = newDifficultyLevel - difficultyLevel;
+        if (linesCleared > 0)
+        {
+            //line clear score is multiplied by level before the clear
+            CalculateScore(linesCleared);
+            DecreaseStepDelay(linesCleared);
+            difficultyLevel = newDifficultyLevel;
+        }
+    }
+
+    private void CalculateScore(int linesCleared)
+    {
+        //calculate line score
+        LineScore(linesCleared);
+
+        //now calculate combo score
+        if (comboCount > 0)
+        {
+            score += 50 * comboCount * difficultyLevel;
+        }
+
+        
+    }
+
+    private void LineScore(int linesCleared)
+    {
+        if (linesCleared == 1)
+        {
+            score += 100 * difficultyLevel;
+            comboCount++;
+        }
+        else if (linesCleared == 2)
+        {
+            score += 300 * difficultyLevel;
+            comboCount++;
+        }
+        else if (linesCleared == 3)
+        {
+            score += 500 * difficultyLevel;
+            comboCount++;
+        }
+        else if (linesCleared == 4)
+        {
+            score += 800 * difficultyLevel;
+            comboCount++;
+        }
+        else if (linesCleared > 4)
+        {
+            score += (800 + (100 * linesCleared)) * difficultyLevel;
+            comboCount++;
+        }
+        else
+        {
+            //reset combo
+            comboCount = -1;
+        }
+    }
+
+    private void DecreaseStepDelay(int linesCleared)
+    {
+        if(linesCleared > 0 && this.activePiece.stepDelay >= .06f)
+        {
+            float stepReduction = linesCleared * stepReductionMultiplier;
+            this.activePiece.stepDelay -= stepReduction;
         }
     }
 
