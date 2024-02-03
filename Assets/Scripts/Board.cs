@@ -3,13 +3,15 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SocialPlatforms.Impl;
 using UnityEngine.Tilemaps;
+using UnityEngine.UI;
+using TMPro;
 
 public class Board : MonoBehaviour
 {
     public Tilemap tilemap { get; private set;}
     public TetrominoData[] tetrominoes;
     public Piece activePiece { get; private set; }
-    public Piece nextPiece { get; private set; }
+    public NextPiece nextPiece { get; private set; }
     public Vector3Int spawnPosition;
     /******************************
      * THIS MAY CAUSE PROBLEMS. INITIALLY THE HEIGHT IS 20, BUT I ADDED 2 BECAUSE SOME OF THE PIECES SPAWN DIRECTLY
@@ -23,6 +25,10 @@ public class Board : MonoBehaviour
     public int comboCount = -1;
     public bool ongoingCombo = false;
     public float stepReductionMultiplier = .05f;
+    public TMP_Text textLevel;
+    public TMP_Text textScore;
+    public int tenLinesCleared = 0;
+    private int nextPieceNum;
 
     public RectInt Bounds
     {
@@ -37,7 +43,8 @@ public class Board : MonoBehaviour
     {
         this.tilemap = GetComponentInChildren<Tilemap>();
         this.activePiece = GetComponentInChildren<Piece>();
-        
+        this.nextPiece = GetComponentInChildren<NextPiece>();
+
         for (int i = 0; i < tetrominoes.Length; i++) {
             this.tetrominoes[i].Initialize();
         }
@@ -45,15 +52,55 @@ public class Board : MonoBehaviour
 
     private void Start()
     {
-        SpawnPiece();
+        SpawnRandomPieces();
     }
 
-    public void SpawnPiece()
+    private void Update()
+    {
+        this.textLevel.SetText(difficultyLevel.ToString());
+
+    }
+
+    public void AddScore(int numberToAdd) 
+    {
+        this.score += numberToAdd;
+
+        //update the UI
+        this.textScore.SetText(score.ToString());
+    }
+
+    public void SpawnRandomPieces()
     {
         int random = Random.Range(0, this.tetrominoes.Length);
         TetrominoData data = this.tetrominoes[random];
-
         this.activePiece.Initialize(this, this.spawnPosition, data);
+
+        nextPieceNum = Random.Range(0, this.tetrominoes.Length);
+        data = this.tetrominoes[nextPieceNum];
+        this.nextPiece.Initialize(this, this.nextPiece.nextPieceSpawnPosition, data, this.tilemap);
+
+
+        if (IsValidPosition(this.activePiece, this.spawnPosition))
+        {
+            SetPiece(this.activePiece);
+        }
+        else
+        {
+            GameOver();
+        }
+    }
+
+    public void SpawnNextPieces()
+    {
+        //use next piece number to set active piece
+        TetrominoData data = this.tetrominoes[nextPieceNum];
+        this.activePiece.Initialize(this, this.spawnPosition, data);
+
+        //Set next piece
+        nextPieceNum = Random.Range(0, this.tetrominoes.Length);
+        data = this.tetrominoes[nextPieceNum];
+        this.nextPiece.SpawnNextPiece(data);
+
 
         if (IsValidPosition(this.activePiece, this.spawnPosition))
         {
@@ -81,8 +128,15 @@ public class Board : MonoBehaviour
             Vector3Int tilePosition = piece.cells[i] + piece.position;
             this.tilemap.SetTile(tilePosition, piece.data.tile);
         }
+    }
 
-        this.score += 1;
+    public void SetNextPiece(NextPiece piece)
+    {
+        for (int i = 0; i < piece.cells.Length; i++)
+        {
+            Vector3Int tilePosition = piece.cells[i] + piece.position;
+            this.tilemap.SetTile(tilePosition, piece.data.tile);
+        }
     }
 
     public void ClearPiece(Piece piece)
@@ -127,14 +181,14 @@ public class Board : MonoBehaviour
 
         RectInt bounds = this.Bounds;
         int row = bounds.yMin;
-        int newDifficultyLevel = difficultyLevel;
+        int newTenLinesCleared = tenLinesCleared;
 
         while (row < bounds.yMax) 
         {
             if (IsLineFull(row))
             {
                 LineClear(row);
-                newDifficultyLevel++;
+                newTenLinesCleared++;
             }
             else
             {
@@ -142,14 +196,19 @@ public class Board : MonoBehaviour
             }
         }
 
-
-        int linesCleared = newDifficultyLevel - difficultyLevel;
+        
+        int linesCleared = newTenLinesCleared - tenLinesCleared;
+        tenLinesCleared = newTenLinesCleared;
         if (linesCleared > 0)
         {
             //line clear score is multiplied by level before the clear
             CalculateScore(linesCleared);
-            DecreaseStepDelay(linesCleared);
-            difficultyLevel = newDifficultyLevel;
+            while(tenLinesCleared >= 10)
+            {
+                DecreaseStepDelay(1);
+                difficultyLevel++;
+                tenLinesCleared -= 10;
+            }
         }
     }
 
@@ -161,37 +220,35 @@ public class Board : MonoBehaviour
         //now calculate combo score
         if (comboCount > 0)
         {
-            score += 50 * comboCount * difficultyLevel;
+            AddScore(50 * comboCount * difficultyLevel);
         }
-
-        
     }
 
     private void LineScore(int linesCleared)
     {
         if (linesCleared == 1)
         {
-            score += 100 * difficultyLevel;
+            AddScore(100 * difficultyLevel);
             comboCount++;
         }
         else if (linesCleared == 2)
         {
-            score += 300 * difficultyLevel;
+            AddScore(300 * difficultyLevel);
             comboCount++;
         }
         else if (linesCleared == 3)
         {
-            score += 500 * difficultyLevel;
+            AddScore(500 * difficultyLevel);
             comboCount++;
         }
         else if (linesCleared == 4)
         {
-            score += 800 * difficultyLevel;
+            AddScore(800 * difficultyLevel);
             comboCount++;
         }
         else if (linesCleared > 4)
         {
-            score += (800 + (100 * linesCleared)) * difficultyLevel;
+            AddScore((800 + (100 * linesCleared)) * difficultyLevel);
             comboCount++;
         }
         else
@@ -201,11 +258,11 @@ public class Board : MonoBehaviour
         }
     }
 
-    private void DecreaseStepDelay(int linesCleared)
+    private void DecreaseStepDelay(int timesToDecrease)
     {
-        if(linesCleared > 0 && this.activePiece.stepDelay >= .06f)
+        if(timesToDecrease > 0 && this.activePiece.stepDelay >= .06f)
         {
-            float stepReduction = linesCleared * stepReductionMultiplier;
+            float stepReduction = timesToDecrease * stepReductionMultiplier;
             this.activePiece.stepDelay -= stepReduction;
         }
     }

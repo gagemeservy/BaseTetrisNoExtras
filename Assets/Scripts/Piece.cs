@@ -42,6 +42,26 @@ public class Piece : MonoBehaviour
         }
     }
 
+    public void PreInitialize(Board board, Vector3Int position, TetrominoData data)
+    {
+        this.board = board;
+        this.position = position;
+        this.data = data;
+        this.rotationIndex = 0;
+        this.stepTime = 0f;
+        this.lockTime = 0f;
+
+        if (this.cells == null)
+        {
+            this.cells = new Vector3Int[data.cells.Length];
+        }
+
+        for (int i = 0; i < data.cells.Length; i++)
+        {
+            this.cells[i] = (Vector3Int)data.cells[i];
+        }
+    }
+
     private void Update()
     {
         this.board.ClearPiece(this);
@@ -113,9 +133,11 @@ public class Piece : MonoBehaviour
 
     private void Lock()
     {
+        //add this score for any time a piece gets locked in place
+        this.board.AddScore(1);
         this.board.SetPiece(this);
         this.board.ClearLines();
-        this.board.SpawnPiece();
+        this.board.SpawnNextPieces();
     }
 
     //MoveWithTimer has 2 delays. One it uses a bool to only move every other update so the piece doesn't move too quickly.
@@ -146,7 +168,7 @@ public class Piece : MonoBehaviour
 
         //add one point for hard drop
         //and then in the board controller 1 point is always added when the piece is placed
-        this.board.score += 1;
+        this.board.AddScore(1);
         Lock();
     }
 
