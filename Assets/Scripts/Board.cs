@@ -5,6 +5,10 @@ using UnityEngine.SocialPlatforms.Impl;
 using UnityEngine.Tilemaps;
 using UnityEngine.UI;
 using TMPro;
+using Unity.Properties;
+using System;
+using UnityEngine.SceneManagement;
+using System.Collections;
 
 public class Board : MonoBehaviour
 {
@@ -20,15 +24,21 @@ public class Board : MonoBehaviour
      * ********************************************************/
     //public Vector2Int boardSize = new Vector2Int(10, 22);
     public Vector2Int boardSize = new Vector2Int(10, 20);
+
+    //ALL STARTING VALUES FOR THE GAME TO WORK
     public int difficultyLevel = 1;
     public int score = 0;
     public int comboCount = -1;
     public bool ongoingCombo = false;
     public float stepReductionMultiplier = .05f;
+    public int tenLinesCleared = 0;
     public TMP_Text textLevel;
     public TMP_Text textScore;
-    public int tenLinesCleared = 0;
     private int nextPieceNum;
+
+    public bool isPaused = false;
+    public GameObject gameOverScreen;
+    public GameObject pauseScreen;
 
     public RectInt Bounds
     {
@@ -41,6 +51,8 @@ public class Board : MonoBehaviour
     }
     private void Awake()
     {
+        this.gameOverScreen.SetActive(false);
+        this.pauseScreen.SetActive(false);
         this.tilemap = GetComponentInChildren<Tilemap>();
         this.activePiece = GetComponentInChildren<Piece>();
         this.nextPiece = GetComponentInChildren<NextPiece>();
@@ -71,11 +83,11 @@ public class Board : MonoBehaviour
 
     public void SpawnRandomPieces()
     {
-        int random = Random.Range(0, this.tetrominoes.Length);
+        int random = UnityEngine.Random.Range(0, this.tetrominoes.Length);
         TetrominoData data = this.tetrominoes[random];
         this.activePiece.Initialize(this, this.spawnPosition, data);
 
-        nextPieceNum = Random.Range(0, this.tetrominoes.Length);
+        nextPieceNum = UnityEngine.Random.Range(0, this.tetrominoes.Length);
         data = this.tetrominoes[nextPieceNum];
         this.nextPiece.Initialize(this, this.nextPiece.nextPieceSpawnPosition, data, this.tilemap);
 
@@ -97,7 +109,7 @@ public class Board : MonoBehaviour
         this.activePiece.Initialize(this, this.spawnPosition, data);
 
         //Set next piece
-        nextPieceNum = Random.Range(0, this.tetrominoes.Length);
+        nextPieceNum = UnityEngine.Random.Range(0, this.tetrominoes.Length);
         data = this.tetrominoes[nextPieceNum];
         this.nextPiece.SpawnNextPiece(data);
 
@@ -114,11 +126,65 @@ public class Board : MonoBehaviour
 
     private void GameOver()
     {
+
+        Pause(this, this.gameOverScreen);
+    }
+
+    public static void Pause(Board board, GameObject screenToShow)
+    {
+        Time.timeScale = 0;
+        board.isPaused = true;
+        screenToShow.SetActive(true);
+    }
+
+    public static void unPause(Board board, GameObject screenToHide)
+    {
+        Time.timeScale = 1;
+        board.isPaused = false;
+        screenToHide.SetActive(false);
+    }
+
+    public void Restart()
+    {
         this.tilemap.ClearAllTiles();
 
-        /********************************
-         * NEED TO ADD MORE GAME OVER LOGIC
-         * ******************************/
+        //Reset all starting values
+        difficultyLevel = 1;
+        score = 0;
+        comboCount = -1;
+        ongoingCombo = false;
+        stepReductionMultiplier = .05f;
+        tenLinesCleared = 0;
+        textLevel.SetText(1.ToString());
+        textScore.SetText(0.ToString());
+        SpawnRandomPieces();
+        unPause(this, this.gameOverScreen);
+}
+
+    public void Quit()
+    {
+        Application.Quit();
+    }
+
+    public void MainMenu()
+    {
+        StartCoroutine(LoadAsyncScene("MainMenu"));
+    }
+
+    IEnumerator LoadAsyncScene(String sceneToSwitchTo)
+    {
+        // The Application loads the Scene in the background as the current Scene runs.
+        // This is particularly good for creating loading screens.
+        // You could also load the Scene by using sceneBuildIndex. In this case Scene2 has
+        // a sceneBuildIndex of 1 as shown in Build Settings.
+
+        AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneToSwitchTo);
+
+        // Wait until the asynchronous scene fully loads
+        while (!asyncLoad.isDone)
+        {
+            yield return null;
+        }
     }
 
     public void SetPiece(Piece piece)
