@@ -1,8 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
-using UnityEngine.Scripting.APIUpdating;
 
 public class Piece : MonoBehaviour
 {
@@ -20,6 +16,12 @@ public class Piece : MonoBehaviour
     private float stepTime;
     private float lockTime;
 
+    //mouse controls
+    public Vector2 firstPressPos;
+    public Vector2 secondPressPos;
+    public Vector2 currentSwipe;
+    public float mouseRoomForError = .5f;
+    private float mouseLockTime = 0;
 
 
     public void Initialize(Board board, Vector3Int position, TetrominoData data)
@@ -70,55 +72,243 @@ public class Piece : MonoBehaviour
 
             this.lockTime += Time.deltaTime;
 
-            //STRAIGHT MOVEMENTS
-            if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow))
-            {
-                Move(Vector2Int.left);
-                timeElapsed = 0;
-                //in each key down reset the time elapsed because that means they stopped holding the key from before
-            }
-            else if (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow))
-            {
-                Move(Vector2Int.right);
-                timeElapsed = 0;
-            }
-            else if (Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow))
-            {
-                Move(Vector2Int.down);
-                timeElapsed = 0;
-            }
-            else if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow))
-            {
-                MoveWithTimer(Vector2Int.left);
-            }
-            else if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow))
-            {
-                MoveWithTimer(Vector2Int.right);
-            }
-            else if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow))
-            {
-                MoveWithTimer(Vector2Int.down);
-            }
-            else if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow))
-            {
-                SlamDrop();
-                timeElapsed = 0;
-            }
-            else if (Input.GetKeyDown(KeyCode.Q) || Input.GetKeyDown(KeyCode.LeftBracket))
-            {
-                Rotate(-1);
-            }
-            else if (Input.GetKeyDown(KeyCode.E) || Input.GetKeyDown(KeyCode.RightBracket))
-            {
-                Rotate(1);
-            }
+            int swipe = -1;
+            swipe = Swipe();
 
-            if (Time.time >= this.stepTime)
+            if (this.board.twoPlayerBoard == null)
             {
-                Step();
+                //STRAIGHT MOVEMENTS
+
+                if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow) || (swipe == 3))
+                {
+                    //Move left
+                    Move(Vector2Int.left);
+                    timeElapsed = 0;
+                    //in each key down reset the time elapsed because that means they stopped holding the key from before
+                }
+                else if (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow) || (swipe == 4))
+                {
+                    //Move right
+                    Move(Vector2Int.right);
+                    timeElapsed = 0;
+                }
+                else if (Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow) || (swipe == 2))
+                {
+                    //Move down
+                    Move(Vector2Int.down);
+                    timeElapsed = 0;
+                }
+                else if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow) || (swipe == 1))
+                {
+                    //slam down
+                    SlamDrop();
+                    timeElapsed = 0;
+                }
+                else if (Input.GetKeyDown(KeyCode.Q) || Input.GetKeyDown(KeyCode.LeftBracket) || (swipe == 5))
+                {
+                    //rotate left
+                    // || Input.GetMouseButtonDown(0)
+                    Rotate(-1);
+                }
+                else if (Input.GetKeyDown(KeyCode.E) || Input.GetKeyDown(KeyCode.RightBracket))
+                {
+                    //rotate right
+                    Rotate(1);
+                }
+                else if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow))
+                {
+                    MoveWithTimer(Vector2Int.left);
+                }
+                else if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow))
+                {
+                    MoveWithTimer(Vector2Int.right);
+                }
+                else if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow))
+                {
+                    MoveWithTimer(Vector2Int.down);
+                }
+                
+
+                if (Time.time >= this.stepTime)
+                {
+                    Step();
+                }
+            }
+            else
+            {
+                //Split up 1 player and 2 player
+
+                //1 player
+                if(board.PlayerNumber == 1)
+                {
+                    if (Input.GetKeyDown(KeyCode.LeftArrow))
+                    {
+                        Move(Vector2Int.left);
+                        timeElapsed = 0;
+                        //in each key down reset the time elapsed because that means they stopped holding the key from before
+                    }
+                    else if (Input.GetKeyDown(KeyCode.RightArrow))
+                    {
+                        Move(Vector2Int.right);
+                        timeElapsed = 0;
+                    }
+                    else if (Input.GetKeyDown(KeyCode.DownArrow))
+                    {
+                        Move(Vector2Int.down);
+                        timeElapsed = 0;
+                    }
+                    else if (Input.GetKeyDown(KeyCode.UpArrow))
+                    {
+                        SlamDrop();
+                        timeElapsed = 0;
+                    }
+                    else if (Input.GetKeyDown(KeyCode.LeftBracket))
+                    {
+                        Rotate(-1);
+                    }
+                    else if (Input.GetKeyDown(KeyCode.RightBracket))
+                    {
+                        Rotate(1);
+                    }
+                    else if (Input.GetKey(KeyCode.LeftArrow))
+                    {
+                        MoveWithTimer(Vector2Int.left);
+                    }
+                    else if (Input.GetKey(KeyCode.RightArrow))
+                    {
+                        MoveWithTimer(Vector2Int.right);
+                    }
+                    else if (Input.GetKey(KeyCode.DownArrow))
+                    {
+                        MoveWithTimer(Vector2Int.down);
+                    }
+
+                    if (Time.time >= this.stepTime)
+                    {
+                        Step();
+                    }
+                }
+                //2 player
+                if (board.PlayerNumber == 2)
+                {
+                    if (Input.GetKeyDown(KeyCode.A))
+                    {
+                        Move(Vector2Int.left);
+                        timeElapsed = 0;
+                        //in each key down reset the time elapsed because that means they stopped holding the key from before
+                    }
+                    else if (Input.GetKeyDown(KeyCode.D))
+                    {
+                        Move(Vector2Int.right);
+                        timeElapsed = 0;
+                    }
+                    else if (Input.GetKeyDown(KeyCode.S))
+                    {
+                        Move(Vector2Int.down);
+                        timeElapsed = 0;
+                    }
+                    else if (Input.GetKeyDown(KeyCode.W))
+                    {
+                        SlamDrop();
+                        timeElapsed = 0;
+                    }
+                    else if (Input.GetKeyDown(KeyCode.Q))
+                    {
+                        Rotate(-1);
+                    }
+                    else if (Input.GetKeyDown(KeyCode.E))
+                    {
+                        Rotate(1);
+                    }
+                    else if (Input.GetKey(KeyCode.A))
+                    {
+                        MoveWithTimer(Vector2Int.left);
+                    }
+                    else if (Input.GetKey(KeyCode.D))
+                    {
+                        MoveWithTimer(Vector2Int.right);
+                    }
+                    else if (Input.GetKey(KeyCode.S))
+                    {
+                        MoveWithTimer(Vector2Int.down);
+                    }
+
+                    if (Time.time >= this.stepTime)
+                    {
+                        Step();
+                    }
+                }
             }
 
             this.board.SetPiece(this);
+        }
+    }
+
+    
+
+    public int Swipe()
+    {
+        //if(!this.board.isPaused && mouseLockTime <= 0f) 
+        if (!this.board.isPaused)
+        {
+            if (Input.GetMouseButtonDown(0))
+            {
+                //save began touch 2d point
+                firstPressPos = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
+            }
+            if (Input.GetMouseButtonUp(0))
+            {
+                //save ended touch 2d point
+                secondPressPos = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
+
+                //create vector from the two points
+                currentSwipe = new Vector2(secondPressPos.x - firstPressPos.x, secondPressPos.y - firstPressPos.y);
+
+                //normalize the 2d vector
+                currentSwipe.Normalize();
+
+                //if(firstPressPos == secondPressPos)
+                if ((secondPressPos.x - mouseRoomForError) < firstPressPos.x && firstPressPos.x < (secondPressPos.x + mouseRoomForError) && (secondPressPos.y - mouseRoomForError) < firstPressPos.y && firstPressPos.y < (secondPressPos.y + mouseRoomForError))
+                {
+                    //secondPressPos = firstPressPos - (Vector2.one * .1f);
+                    return 5;
+                }
+                else if (currentSwipe.y > 0 && currentSwipe.x > -mouseRoomForError && currentSwipe.x < mouseRoomForError)
+                {//swipe upwards
+                    return 1;
+                }
+                else if (currentSwipe.y < 0 && currentSwipe.x > -mouseRoomForError && currentSwipe.x < mouseRoomForError)
+                {//swipe down
+                    return 2;
+                }
+                else if (currentSwipe.x < 0 && currentSwipe.y > -mouseRoomForError && currentSwipe.y < mouseRoomForError)
+                {//swipe left
+                    return 3;
+                }
+                else if (currentSwipe.x > 0 && currentSwipe.y > -mouseRoomForError && currentSwipe.y < mouseRoomForError)
+                {//swipe right
+                    return 4;
+                }
+                else
+                {
+                    return -1;
+                }
+            }
+            else
+            {
+                return -1;
+            }
+        }
+        //else if(mouseLockTime > 0)
+        //{
+            //mouseLockTime -= Time.deltaTime;
+        //    mouseLockTime -= .1f;
+        //    return -1;
+        //}
+        else
+        {
+        //    mouseLockTime = 30f;
+            return -1;
         }
     }
 
