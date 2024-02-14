@@ -3825,32 +3825,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tetrominoes:
   - tetromino: 0
-    tile: {fileID: 11400000, guid: 75d034f09e4f3a945b83cdc6aa6548f2, type: 2}
+    tile: {fileID: 11400000, guid: 304a061aaa4f2e149a7521be4a0cfb8a, type: 2}
   - tetromino: 1
-    tile: {fileID: 11400000, guid: 75d034f09e4f3a945b83cdc6aa6548f2, type: 2}
+    tile: {fileID: 11400000, guid: 304a061aaa4f2e149a7521be4a0cfb8a, type: 2}
   - tetromino: 2
-    tile: {fileID: 11400000, guid: 75d034f09e4f3a945b83cdc6aa6548f2, type: 2}
+    tile: {fileID: 11400000, guid: 304a061aaa4f2e149a7521be4a0cfb8a, type: 2}
   - tetromino: 3
-    tile: {fileID: 11400000, guid: 75d034f09e4f3a945b83cdc6aa6548f2, type: 2}
+    tile: {fileID: 11400000, guid: 304a061aaa4f2e149a7521be4a0cfb8a, type: 2}
   - tetromino: 4
-    tile: {fileID: 11400000, guid: 75d034f09e4f3a945b83cdc6aa6548f2, type: 2}
+    tile: {fileID: 11400000, guid: 304a061aaa4f2e149a7521be4a0cfb8a, type: 2}
   - tetromino: 5
-    tile: {fileID: 11400000, guid: 75d034f09e4f3a945b83cdc6aa6548f2, type: 2}
+    tile: {fileID: 11400000, guid: 304a061aaa4f2e149a7521be4a0cfb8a, type: 2}
   - tetromino: 6
-    tile: {fileID: 11400000, guid: 75d034f09e4f3a945b83cdc6aa6548f2, type: 2}
-  - tetromino: 7
-    tile: {fileID: 11400000, guid: 304a061aaa4f2e149a7521be4a0cfb8a, type: 2}
-  - tetromino: 8
-    tile: {fileID: 11400000, guid: 304a061aaa4f2e149a7521be4a0cfb8a, type: 2}
-  - tetromino: 9
-    tile: {fileID: 11400000, guid: 304a061aaa4f2e149a7521be4a0cfb8a, type: 2}
-  - tetromino: 10
-    tile: {fileID: 11400000, guid: 304a061aaa4f2e149a7521be4a0cfb8a, type: 2}
-  - tetromino: 11
-    tile: {fileID: 11400000, guid: 304a061aaa4f2e149a7521be4a0cfb8a, type: 2}
-  - tetromino: 12
-    tile: {fileID: 11400000, guid: 304a061aaa4f2e149a7521be4a0cfb8a, type: 2}
-  - tetromino: 13
     tile: {fileID: 11400000, guid: 304a061aaa4f2e149a7521be4a0cfb8a, type: 2}
   spawnPosition: {x: -1, y: 8, z: 0}
   twoPlayerBoard: {fileID: 0}
