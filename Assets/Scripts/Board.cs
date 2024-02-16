@@ -31,6 +31,7 @@ public class Board : MonoBehaviour
     public int tenLinesCleared = 0;
     public TMP_Text textLevel;
     public TMP_Text textScore;
+    public TMP_Text textCombo;
     private int nextPieceNum;
 
     public bool isPaused = false;
@@ -130,6 +131,8 @@ public class Board : MonoBehaviour
     {
         //use next piece number to set active piece
         TetrominoData data = this.tetrominoes[nextPieceNum];
+        //This debug shows the name of the tile but it's not neccesary anymore
+        //Debug.Log(data.tetromino);
         this.activePiece.Initialize(this, this.spawnPosition, data);
 
         //Set next piece
@@ -227,6 +230,7 @@ public class Board : MonoBehaviour
         this.stepReductionMultiplier = .05f;
         this.tenLinesCleared = 0;
         this.textLevel.SetText(1.ToString());
+        this.textCombo.SetText(0.ToString());
         this.textScore.SetText(0.ToString());
         SpawnRandomPieces();
         unPause(this, this.gameOverScreen);
@@ -252,6 +256,7 @@ public class Board : MonoBehaviour
         this.stepReductionMultiplier = .05f;
         this.tenLinesCleared = 0;
         this.textLevel.SetText(1.ToString());
+        this.textCombo.SetText(0.ToString());
         this.textScore.SetText(0.ToString());
         SpawnRandomPieces();
         //unPause(this, this.gameOverScreen);
@@ -282,6 +287,7 @@ public class Board : MonoBehaviour
         this.stepReductionMultiplier = .05f;
         this.tenLinesCleared = 0;
         this.textLevel.SetText(1.ToString());
+        this.textCombo.SetText(0.ToString());
         this.textScore.SetText(0.ToString());
         SpawnRandomPieces();
         unPause(this, this.pauseScreen);
@@ -352,10 +358,6 @@ public class Board : MonoBehaviour
                 return false;
             }
 
-            /*******************************************
-             * HERE WE WILL ALSO NEED TO CHECK IF THE CURRENT PIECE IS A STONE,
-             * THEN CHECK IF THE PIECE IN THE SPACE IS A BUBBLE BECAUSE IF SO THEN WE CAN OVER WRITE AND DELETE PART OF IT
-             * ******************************************/
             if (this.tilemap.HasTile(tilePosition))
             {
                 return false;
@@ -369,7 +371,7 @@ public class Board : MonoBehaviour
     public void ClearLines()
     {
         //DIFFICULTY LEVEL IS KEPT TRACK OF IN THIS FUNCTION EVERY TIME A LEVEL IS CLEARED
-
+        //NEED TO CHECK IF A LINE IS MADE ONLY OF BUBBLE PIECES
         RectInt bounds = this.Bounds;
         int row = bounds.yMin;
         int newTenLinesCleared = tenLinesCleared;
@@ -403,6 +405,11 @@ public class Board : MonoBehaviour
 
             this.textLevel.SetText(difficultyLevel.ToString());
         }
+        else 
+        {
+            comboCount = -1;
+            this.textCombo.SetText(0.ToString());
+        }
     }
 
     private void CalculateScore(int linesCleared)
@@ -415,6 +422,16 @@ public class Board : MonoBehaviour
         {
             AddScore(50 * comboCount * difficultyLevel);
         }
+        
+        if(comboCount == -1)
+        {
+            this.textCombo.SetText(0.ToString());
+        }
+        else
+        {
+            this.textCombo.SetText(comboCount.ToString());
+        }
+        
     }
 
     private void LineScore(int linesCleared)
